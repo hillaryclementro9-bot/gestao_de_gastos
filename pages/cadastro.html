@@ -3,178 +3,458 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VELORA — Criar conta</title>
+  <title>PAI PEDE — Criar conta</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="stylesheet" href="../css/cadastro.css" />
-  <link rel="stylesheet" href="../css/responsivo.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #e50925;
+      --red2: #8b0000;
+      --bg: #0a0a0a;
+      --card: #111;
+      --border: #1e1e1e;
+      --muted: #555;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 70px;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 50%, rgba(229,9,37,.18) 0%, transparent 65%),
+        #0d0d0d;
+    }
+
+    .left::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; right: -80px;
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(139,0,0,.2), transparent 70%);
+      pointer-events: none;
+    }
+
+    .left-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 56px;
+      text-decoration: none;
+    }
+
+    .logo-hex {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--red), var(--red2));
+      clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 900;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&display=swap');
+    .logo-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px; font-weight: 900; letter-spacing: 3px;
+      background: linear-gradient(90deg, #fff 40%, var(--red));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .left h1 {
+      font-size: clamp(28px, 3vw, 42px);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .left h1 em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--red), #ff6b6b);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .left p {
+      font-size: 15px;
+      color: #666;
+      line-height: 1.7;
+      max-width: 340px;
+      margin-bottom: 48px;
+    }
+
+    .steps { display: flex; flex-direction: column; gap: 20px; }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .step-num {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--red), var(--red2));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .step-info strong { display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+    .step-info span   { font-size: 12px; color: #555; }
+
+    /* ── RIGHT PANEL ── */
+    .right {
+      width: 500px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 52px;
+      background: var(--card);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+    }
+
+    .form-header { margin-bottom: 32px; }
+    .form-header h2 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .form-header p  { font-size: 14px; color: var(--muted); }
+
+    .group { margin-bottom: 18px; }
+
+    .group label {
+      display: block;
+      font-size: 11px; font-weight: 700;
+      color: #444;
+      text-transform: uppercase; letter-spacing: .7px;
+      margin-bottom: 8px;
+    }
+
+    .input-wrap { position: relative; }
+
+    .input-wrap i.ic {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: #333; font-size: 13px;
+      pointer-events: none;
+    }
+
+    .input-wrap input {
+      width: 100%; height: 48px;
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 0 44px;
+      color: #fff; font-size: 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(229,9,37,.1);
+    }
+
+    .input-wrap input.error { border-color: #ff4757; }
+    .input-wrap input.ok    { border-color: #22c55e; }
+
+    .eye-btn {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: #333; cursor: pointer; font-size: 13px;
+      transition: color .2s;
+    }
+    .eye-btn:hover { color: var(--red); }
+
+    .err-msg {
+      display: none;
+      font-size: 12px; color: #ff4757;
+      margin-top: 6px;
+      align-items: center; gap: 5px;
+    }
+    .err-msg.show { display: flex; }
+
+    /* strength bar */
+    .strength-wrap { margin-top: 8px; }
+    .strength-bar {
+      height: 4px; background: #222; border-radius: 2px; overflow: hidden; margin-bottom: 4px;
+    }
+    .strength-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; width: 0; }
+    .strength-label { font-size: 11px; color: var(--muted); }
+
+    .toast {
+      display: none;
+      align-items: center; gap: 10px;
+      padding: 12px 16px; border-radius: 10px;
+      font-size: 13px; margin-bottom: 18px;
+    }
+    .toast.show { display: flex; }
+    .toast.success { background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.25); color: #22c55e; }
+    .toast.error   { background: rgba(229,9,37,.08);  border: 1px solid rgba(229,9,37,.25);  color: #ff6b6b; }
+
+    .btn-submit {
+      width: 100%; height: 50px;
+      background: linear-gradient(135deg, var(--red), var(--red2));
+      border: none; border-radius: 10px;
+      color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      box-shadow: 0 4px 20px rgba(229,9,37,.35);
+      transition: all .2s;
+    }
+    .btn-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(229,9,37,.5); }
+    .btn-submit:disabled { opacity: .6; cursor: not-allowed; }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 24px 0;
+    }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .divider span { font-size: 12px; color: #333; }
+
+    .form-footer { text-align: center; font-size: 14px; color: var(--muted); }
+    .form-footer a { color: var(--red); text-decoration: none; font-weight: 600; }
+    .form-footer a:hover { text-decoration: underline; }
+
+    .terms {
+      font-size: 12px; color: #333;
+      text-align: center; margin-top: 16px; line-height: 1.5;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 860px) {
+      .left { display: none; }
+      .right { width: 100%; border-left: none; padding: 40px 28px; }
+    }
+  </style>
 </head>
-<body class="auth-page">
+<body>
 
-  <div class="auth-container">
+<!-- LEFT -->
+<div class="left">
+  <a href="../index.html" class="left-logo">
+    <div class="logo-hex">P</div>
+    <span class="logo-name">PAI PEDE</span>
+  </a>
 
-    <div class="auth-logo">
-      <span class="auth-logo-icon">V</span>
-      VEL<span>ORA</span>
+  <h1>Comece a cuidar<br>do seu <em>dinheiro</em><br>agora.</h1>
+  <p>Crie sua conta gratuita e tenha controle total das suas finanças em minutos.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-info">
+        <strong>Crie sua conta</strong>
+        <span>Preencha seus dados básicos</span>
+      </div>
     </div>
-
-    <h1 class="auth-title">Criar sua conta</h1>
-    <p class="auth-subtitle">Comece a organizar suas finanças hoje mesmo.</p>
-
-    <form class="auth-form" id="registerForm" novalidate>
-
-      <!-- Nome -->
-      <div class="auth-group">
-        <label for="name">Nome completo</label>
-        <input type="text" id="name" placeholder="Seu nome completo" autocomplete="name" />
-        <span class="auth-error" id="err-name"><i class="fa fa-circle-exclamation"></i> <span></span></span>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-info">
+        <strong>Adicione suas contas</strong>
+        <span>Conecte seus bancos e cartões</span>
       </div>
-
-      <!-- E-mail -->
-      <div class="auth-group">
-        <label for="email">E-mail</label>
-        <input type="email" id="email" placeholder="seu@email.com" autocomplete="email" />
-        <span class="auth-error" id="err-email"><i class="fa fa-circle-exclamation"></i> <span></span></span>
-      </div>
-
-      <!-- Senha -->
-      <div class="auth-group">
-        <label for="password">Senha</label>
-        <div class="password-wrapper">
-          <input type="password" id="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
-          <button type="button" class="password-toggle" data-target="password" aria-label="Mostrar senha">
-            <i class="fa fa-eye"></i>
-          </button>
-        </div>
-        <span class="auth-error" id="err-password"><i class="fa fa-circle-exclamation"></i> <span></span></span>
-      </div>
-
-      <!-- Confirmar senha -->
-      <div class="auth-group">
-        <label for="confirm">Confirmar senha</label>
-        <div class="password-wrapper">
-          <input type="password" id="confirm" placeholder="Repita a senha" autocomplete="new-password" />
-          <button type="button" class="password-toggle" data-target="confirm" aria-label="Mostrar senha">
-            <i class="fa fa-eye"></i>
-          </button>
-        </div>
-        <span class="auth-error" id="err-confirm"><i class="fa fa-circle-exclamation"></i> <span></span></span>
-      </div>
-
-      <!-- Toast -->
-      <div class="auth-toast" id="toast"></div>
-
-      <!-- Submit -->
-      <button type="submit" class="auth-button" id="submitBtn">
-        <div class="auth-spinner" id="spinner"></div>
-        <span id="btnText"><i class="fa fa-user-plus"></i> Criar conta</span>
-      </button>
-
-    </form>
-
-    <div class="auth-divider"></div>
-
-    <div class="auth-footer">
-      Já tem uma conta? <a href="login.html">Entrar</a>
     </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-info">
+        <strong>Acompanhe tudo</strong>
+        <span>Veja seu dinheiro crescer</span>
+      </div>
+    </div>
+  </div>
+</div>
 
+<!-- RIGHT -->
+<div class="right">
+  <div class="form-header">
+    <h2>Criar sua conta 🚀</h2>
+    <p>Preencha os dados abaixo para começar.</p>
   </div>
 
-  <script>
-    // Redirect if already logged in
-    if (JSON.parse(localStorage.getItem('velora_session') || 'null')) {
-      window.location.href = 'dashboard.html';
+  <div class="toast" id="toast"></div>
+
+  <form id="registerForm" novalidate>
+    <div class="group">
+      <label>Nome completo</label>
+      <div class="input-wrap">
+        <i class="fa fa-user ic"></i>
+        <input type="text" id="name" placeholder="Seu nome completo" autocomplete="name" />
+      </div>
+      <div class="err-msg" id="err-name"><i class="fa fa-circle-exclamation"></i><span></span></div>
+    </div>
+
+    <div class="group">
+      <label>E-mail</label>
+      <div class="input-wrap">
+        <i class="fa fa-envelope ic"></i>
+        <input type="email" id="email" placeholder="seu@email.com" autocomplete="email" />
+      </div>
+      <div class="err-msg" id="err-email"><i class="fa fa-circle-exclamation"></i><span></span></div>
+    </div>
+
+    <div class="group">
+      <label>Senha</label>
+      <div class="input-wrap">
+        <i class="fa fa-lock ic"></i>
+        <input type="password" id="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
+        <button type="button" class="eye-btn" id="eye-pw"><i class="fa fa-eye"></i></button>
+      </div>
+      <div class="strength-wrap">
+        <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+        <div class="strength-label" id="strength-label"></div>
+      </div>
+      <div class="err-msg" id="err-password"><i class="fa fa-circle-exclamation"></i><span></span></div>
+    </div>
+
+    <button type="submit" class="btn-submit" id="submitBtn">
+      <div class="spinner" id="spinner"></div>
+      <span id="btnText"><i class="fa fa-user-plus"></i> Criar minha conta</span>
+    </button>
+  </form>
+
+  <p class="terms">Ao criar sua conta você concorda com os <a href="#" style="color:var(--red)">Termos de uso</a>.</p>
+
+  <div class="divider"><span>ou</span></div>
+
+  <div class="form-footer">
+    Já tem conta? <a href="login.html">Entrar agora</a>
+  </div>
+</div>
+
+<script>
+  if (JSON.parse(localStorage.getItem('velora_session') || 'null')) {
+    window.location.href = 'dashboard.html';
+  }
+
+  // Toggle senha
+  function toggleEye(btnId, inputId) {
+    document.getElementById(btnId).addEventListener('click', function() {
+      const inp = document.getElementById(inputId);
+      const isText = inp.type === 'text';
+      inp.type = isText ? 'password' : 'text';
+      this.querySelector('i').className = isText ? 'fa fa-eye' : 'fa fa-eye-slash';
+    });
+  }
+  toggleEye('eye-pw', 'password');
+
+  // Força da senha
+  document.getElementById('password').addEventListener('input', function() {
+    const pw = this.value;
+    const fill  = document.getElementById('strength-fill');
+    const label = document.getElementById('strength-label');
+    let score = 0;
+    if (pw.length >= 8)          score++;
+    if (/[A-Z]/.test(pw))        score++;
+    if (/[0-9]/.test(pw))        score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    const levels = [
+      { w: '0%',   bg: 'transparent', txt: '' },
+      { w: '25%',  bg: '#ef4444',     txt: 'Fraca' },
+      { w: '50%',  bg: '#f59e0b',     txt: 'Razoável' },
+      { w: '75%',  bg: '#3b82f6',     txt: 'Boa' },
+      { w: '100%', bg: '#22c55e',     txt: 'Forte' },
+    ];
+    fill.style.width      = levels[score].w;
+    fill.style.background = levels[score].bg;
+    label.textContent     = levels[score].txt;
+    label.style.color     = levels[score].bg;
+  });
+
+  async function hashPassword(pw) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function setError(id, msg) {
+    document.getElementById(id).classList.add('error');
+    document.getElementById(id).classList.remove('ok');
+    const e = document.getElementById('err-' + id);
+    e.querySelector('span').textContent = msg;
+    e.classList.add('show');
+    return false;
+  }
+
+  function setOk(id) {
+    document.getElementById(id).classList.remove('error');
+    document.getElementById(id).classList.add('ok');
+    document.getElementById('err-' + id).classList.remove('show');
+    return true;
+  }
+
+  function showToast(type, msg) {
+    const t = document.getElementById('toast');
+    t.className = 'toast ' + type + ' show';
+    t.innerHTML = `<i class="fa fa-${type === 'success' ? 'circle-check' : 'circle-xmark'}"></i> ${msg}`;
+  }
+
+  function setLoading(on) {
+    document.getElementById('submitBtn').disabled = on;
+    document.getElementById('spinner').style.display = on ? 'block' : 'none';
+    document.getElementById('btnText').style.display = on ? 'none' : 'flex';
+  }
+
+  // Validação em tempo real
+  document.getElementById('name').addEventListener('blur', () => {
+    document.getElementById('name').value.trim().length >= 3 ? setOk('name') : setError('name', 'Informe seu nome completo.');
+  });
+  document.getElementById('email').addEventListener('blur', () => {
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('email').value.trim()) ? setOk('email') : setError('email', 'E-mail inválido.');
+  });
+  document.getElementById('password').addEventListener('blur', () => {
+    document.getElementById('password').value.length >= 8 ? setOk('password') : setError('password', 'Mínimo 8 caracteres.');
+  });
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name  = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const pw    = document.getElementById('password').value;
+
+    let valid = true;
+    if (name.length < 3)                            valid = setError('name',     'Informe seu nome completo.'); else setOk('name');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) valid = setError('email',    'E-mail inválido.');           else setOk('email');
+    if (pw.length < 8)                              valid = setError('password', 'Mínimo 8 caracteres.');       else setOk('password');
+    if (!valid) return;
+
+    const users = JSON.parse(localStorage.getItem('velora_users') || '[]');
+    if (users.find(u => u.email === email)) {
+      showToast('error', 'Este e-mail já está cadastrado.');
+      setError('email', 'E-mail já cadastrado.');
+      return;
     }
 
-    // Toggle senha
-    document.querySelectorAll('.password-toggle').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const input = document.getElementById(btn.dataset.target);
-        const isText = input.type === 'text';
-        input.type = isText ? 'password' : 'text';
-        btn.querySelector('i').className = isText ? 'fa fa-eye' : 'fa fa-eye-slash';
-      });
-    });
+    setLoading(true);
+    const hash = await hashPassword(pw);
+    users.push({ id: Date.now().toString(), name, email, password: hash, createdAt: new Date().toISOString() });
+    localStorage.setItem('velora_users', JSON.stringify(users));
+    setLoading(false);
 
-    // Hash SHA-256
-    async function hashPassword(pw) {
-      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
-      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-    }
-
-    function setError(fieldId, msg) {
-      const input = document.getElementById(fieldId);
-      const err   = document.getElementById('err-' + fieldId);
-      input.classList.add('error'); input.classList.remove('success');
-      err.querySelector('span').textContent = msg;
-      err.classList.add('show');
-      return false;
-    }
-
-    function setOk(fieldId) {
-      const input = document.getElementById(fieldId);
-      const err   = document.getElementById('err-' + fieldId);
-      input.classList.remove('error'); input.classList.add('success');
-      err.classList.remove('show');
-      return true;
-    }
-
-    function showToast(type, msg) {
-      const t = document.getElementById('toast');
-      t.className = `auth-toast ${type} show`;
-      t.innerHTML = `<i class="fa fa-${type==='success'?'circle-check':'circle-xmark'}"></i> ${msg}`;
-    }
-
-    // Validação blur
-    document.getElementById('name').addEventListener('blur', () => {
-      document.getElementById('name').value.trim().length >= 3 ? setOk('name') : setError('name', 'Informe seu nome completo.');
-    });
-    document.getElementById('email').addEventListener('blur', () => {
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('email').value.trim()) ? setOk('email') : setError('email', 'E-mail inválido.');
-    });
-    document.getElementById('password').addEventListener('blur', () => {
-      document.getElementById('password').value.length >= 8 ? setOk('password') : setError('password', 'Mínimo 8 caracteres.');
-    });
-    document.getElementById('confirm').addEventListener('blur', () => {
-      const pw = document.getElementById('password').value;
-      const cf = document.getElementById('confirm').value;
-      cf === pw && cf.length > 0 ? setOk('confirm') : setError('confirm', 'As senhas não coincidem.');
-    });
-
-    // Submit
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name  = document.getElementById('name').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const pw    = document.getElementById('password').value;
-      const cf    = document.getElementById('confirm').value;
-
-      let valid = true;
-      if (name.length < 3)                            valid = setError('name',     'Informe seu nome completo.'); else setOk('name');
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) valid = setError('email',    'E-mail inválido.');           else setOk('email');
-      if (pw.length < 8)                              valid = setError('password', 'Mínimo 8 caracteres.');       else setOk('password');
-      if (cf !== pw || cf.length === 0)               valid = setError('confirm',  'As senhas não coincidem.');   else setOk('confirm');
-      if (!valid) return;
-
-      const users = JSON.parse(localStorage.getItem('velora_users') || '[]');
-      if (users.find(u => u.email === email)) {
-        showToast('error', 'Este e-mail já está cadastrado.');
-        setError('email', 'E-mail já cadastrado.');
-        return;
-      }
-
-      const btn     = document.getElementById('submitBtn');
-      const spinner = document.getElementById('spinner');
-      const btnText = document.getElementById('btnText');
-      btn.disabled = true; spinner.style.display = 'block'; btnText.style.display = 'none';
-
-      const hash = await hashPassword(pw);
-      users.push({ name, email, password: hash, createdAt: new Date().toISOString() });
-      localStorage.setItem('velora_users', JSON.stringify(users));
-
-      spinner.style.display = 'none'; btnText.style.display = 'flex'; btn.disabled = false;
-      showToast('success', 'Conta criada! Redirecionando…');
-      setTimeout(() => { window.location.href = 'login.html'; }, 1800);
-    });
-  </script>
+    showToast('success', 'Conta criada com sucesso! Redirecionando…');
+    setTimeout(() => { window.location.href = 'login.html'; }, 1800);
+  });
+</script>
 </body>
 </html>

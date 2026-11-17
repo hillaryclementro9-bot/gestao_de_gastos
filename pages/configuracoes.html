@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VELORA — Categorias e configurações</title>
+  <title>PAI PEDE — Categorias e configurações</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="../css/dashboard.css" />
   <link rel="stylesheet" href="../css/responsivo.css" />
@@ -256,7 +256,7 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">VEL<span>ORA</span></div>
+    <div class="sidebar-logo">PAI <span>PEDE</span></div>
     <nav class="sidebar-menu">
       <a href="dashboard.html"><i class="fa fa-chart-pie"></i> Visão geral</a>
       <a href="transacoes.html"><i class="fa fa-arrow-right-arrow-left"></i> Transações</a>
@@ -265,7 +265,7 @@
       <a href="planejamento.html"><i class="fa fa-bullseye"></i> Orçamento e metas</a>
       <a href="configuracoes.html" class="active"><i class="fa fa-sliders"></i> Categorias e config.</a>
     </nav>
-    <div class="sidebar-footer">© 2025 VELORA</div>
+    <div class="sidebar-footer">© 2026 PAI PEDE</div>
   </aside>
 
   <!-- MAIN -->
@@ -320,7 +320,7 @@
           <div class="avatar-big" id="avatarInitial">HN</div>
           <div class="avatar-info">
             <div class="avatar-name" id="displayName">Hillary Nicoli</div>
-            <div class="avatar-email" id="displayEmail">hillary@velora.app</div>
+            <div class="avatar-email" id="displayEmail">usuario@paipede.app</div>
           </div>
           <button class="action-btn" id="btnEditProfile" title="Editar perfil"><i class="fa fa-pen"></i></button>
         </div>
@@ -642,7 +642,7 @@ function deleteCat(id) {
 function loadProfile() {
   const p = getProfile();
   document.getElementById('displayName').textContent  = p.name  || 'Hillary Nicoli';
-  document.getElementById('displayEmail').textContent = p.email || 'hillary@velora.app';
+  document.getElementById('displayEmail').textContent = p.email || 'usuario@paipede.app';
   const initials = (p.name || 'HN').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
   document.getElementById('avatarInitial').textContent = initials;
 }

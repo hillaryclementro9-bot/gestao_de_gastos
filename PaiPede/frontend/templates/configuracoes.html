@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% set active = "config" %}
+{% block title %}Configurações{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="hamburger"><i class="fa fa-bars"></i></button>
+    <h1>Configurações</h1>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div>
+    <!-- PERFIL -->
+    <div class="card" style="margin-bottom:20px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:18px"><i class="fa fa-user" style="color:#e50925"></i> Editar perfil</div>
+      <div class="msg" id="msg-perfil"></div>
+      <div class="group"><label>Nome</label><input type="text" id="p-nome"/></div>
+      <div class="group"><label>E-mail</label><input type="email" id="p-email"/></div>
+      <button class="btn btn-red" onclick="salvarPerfil()"><i class="fa fa-floppy-disk"></i> Salvar perfil</button>
+    </div>
+    <!-- SENHA -->
+    <div class="card">
+      <div style="font-size:15px;font-weight:700;margin-bottom:18px"><i class="fa fa-lock" style="color:#e50925"></i> Alterar senha</div>
+      <div class="msg" id="msg-senha"></div>
+      <div class="group"><label>Senha atual</label><input type="password" id="s-atual" placeholder="Senha atual"/></div>
+      <div class="group"><label>Nova senha</label><input type="password" id="s-nova" placeholder="Mínimo 6 caracteres"/></div>
+      <div class="group"><label>Confirmar nova senha</label><input type="password" id="s-conf" placeholder="Repita a nova senha"/></div>
+      <button class="btn btn-red" onclick="alterarSenha()"><i class="fa fa-key"></i> Alterar senha</button>
+    </div>
+  </div>
+
+  <div>
+    <!-- PREFERÊNCIAS -->
+    <div class="card" style="margin-bottom:20px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:18px"><i class="fa fa-sliders" style="color:#e50925"></i> Preferências</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #161616">
+        <div><strong style="font-size:14px">Notificações</strong><div style="font-size:12px;color:#555">Alertas de vencimento</div></div>
+        <label style="position:relative;width:44px;height:24px">
+          <input type="checkbox" id="t-notif" onchange="salvarPrefs()" style="opacity:0;width:0;height:0"/>
+          <span id="sl-notif" style="position:absolute;inset:0;background:#2a2a2a;border-radius:12px;cursor:pointer;transition:.3s">
+            <span id="sl-notif-dot" style="position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#666;border-radius:50%;transition:.3s"></span>
+          </span>
+        </label>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0">
+        <div><strong style="font-size:14px">Tema escuro</strong><div style="font-size:12px;color:#555">Interface em modo escuro</div></div>
+        <label style="position:relative;width:44px;height:24px">
+          <input type="checkbox" id="t-tema" checked onchange="salvarPrefs()" style="opacity:0;width:0;height:0"/>
+          <span id="sl-tema" style="position:absolute;inset:0;background:#e50925;border-radius:12px;cursor:pointer;transition:.3s">
+            <span id="sl-tema-dot" style="position:absolute;width:18px;height:18px;left:23px;bottom:3px;background:#fff;border-radius:50%;transition:.3s"></span>
+          </span>
+        </label>
+      </div>
+    </div>
+    <!-- CATEGORIAS -->
+    <div class="card">
+      <div style="font-size:15px;font-weight:700;margin-bottom:16px"><i class="fa fa-tags" style="color:#e50925"></i> Categorias</div>
+      <div id="cat-list" style="margin-bottom:14px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="text" id="nc-nome" placeholder="Nome da categoria" style="flex:1;min-width:120px;background:#1a1a1a;border:1px solid #252525;border-radius:8px;padding:9px 12px;color:#fff;font-size:13px;outline:none"/>
+        <select id="nc-tipo" style="background:#1a1a1a;border:1px solid #252525;border-radius:8px;padding:9px 12px;color:#fff;font-size:13px;outline:none">
+          <option value="despesa">Despesa</option><option value="receita">Receita</option>
+        </select>
+        <button class="btn btn-red btn-sm" onclick="adicionarCat()"><i class="fa fa-plus"></i> Adicionar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function showMsg(id,msg,t){const e=document.getElementById(id);e.innerHTML=`<i class="fa fa-${t==='ok'?'circle-check':'circle-xmark'}"></i> ${msg}`;e.className='msg '+t;setTimeout(()=>e.className='msg',4000);}
+
+function toggleSlider(id, on) {
+  const sl = document.getElementById('sl-'+id);
+  const dot = document.getElementById('sl-'+id+'-dot');
+  sl.style.background = on ? '#e50925' : '#2a2a2a';
+  dot.style.left = on ? '23px' : '3px';
+  dot.style.background = on ? '#fff' : '#666';
+}
+
+async function carregarPerfil() {
+  const r = await fetch('/api/perfil');
+  const d = await r.json();
+  if (!d.ok) return;
+  document.getElementById('p-nome').value  = d.data.nome;
+  document.getElementById('p-email').value = d.data.email;
+  const notif = d.data.notificacoes_ativas == 1;
+  const tema  = d.data.tema === 'escuro';
+  document.getElementById('t-notif').checked = notif;
+  document.getElementById('t-tema').checked  = tema;
+  toggleSlider('notif', notif);
+  toggleSlider('tema',  tema);
+}
+
+async function salvarPerfil() {
+  const body = {nome:document.getElementById('p-nome').value.trim(),email:document.getElementById('p-email').value.trim(),
+    tema:document.getElementById('t-tema').checked?'escuro':'claro',
+    notificacoes_ativas:document.getElementById('t-notif').checked?1:0};
+  if (!body.nome||!body.email) { showMsg('msg-perfil','Preencha nome e e-mail.','err'); return; }
+  const r = await fetch('/api/perfil',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d = await r.json();
+  showMsg('msg-perfil', d.ok?'Perfil atualizado!':d.msg, d.ok?'ok':'err');
+}
+
+async function salvarPrefs() {
+  const notif = document.getElementById('t-notif').checked;
+  const tema  = document.getElementById('t-tema').checked;
+  toggleSlider('notif', notif);
+  toggleSlider('tema',  tema);
+  const body = {nome:document.getElementById('p-nome').value||'',email:document.getElementById('p-email').value||'',
+    tema:tema?'escuro':'claro',notificacoes_ativas:notif?1:0};
+  await fetch('/api/perfil',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+}
+
+async function alterarSenha() {
+  const atual=document.getElementById('s-atual').value,nova=document.getElementById('s-nova').value,conf=document.getElementById('s-conf').value;
+  if (nova!==conf) { showMsg('msg-senha','Senhas não conferem.','err'); return; }
+  if (nova.length<6) { showMsg('msg-senha','Nova senha mínimo 6 caracteres.','err'); return; }
+  const r = await fetch('/api/alterar-senha',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({senha_atual:atual,nova_senha:nova})});
+  const d = await r.json();
+  showMsg('msg-senha',d.ok?'Senha alterada!':d.msg,d.ok?'ok':'err');
+  if(d.ok){document.getElementById('s-atual').value='';document.getElementById('s-nova').value='';document.getElementById('s-conf').value='';}
+}
+
+async function carregarCats() {
+  const r = await fetch('/api/categorias');
+  const d = await r.json();
+  const el = document.getElementById('cat-list');
+  if (!d.data?.length) { el.innerHTML='<div style="color:#333;font-size:13px">Nenhuma categoria</div>'; return; }
+  el.innerHTML = d.data.map(c=>`
+    <div style="display:flex;align-items:center;gap:10px;background:#1a1a1a;border-radius:9px;padding:9px 12px;margin-bottom:6px">
+      <span style="font-size:13px;flex:1">${c.nome}</span>
+      <span style="font-size:11px;color:#555">${c.tipo}</span>
+      ${c.id_usuario ? `<button class="btn-icon del" onclick="excluirCat(${c.id_categoria})"><i class="fa fa-trash"></i></button>` : '<i class="fa fa-lock" style="color:#333;font-size:12px" title="Padrão"></i>'}
+    </div>`).join('');
+}
+
+async function adicionarCat() {
+  const nome=document.getElementById('nc-nome').value.trim(),tipo=document.getElementById('nc-tipo').value;
+  if (!nome) { alert('Informe o nome.'); return; }
+  const r = await fetch('/api/categorias',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,tipo})});
+  const d = await r.json();
+  if (d.ok) { document.getElementById('nc-nome').value=''; carregarCats(); } else alert(d.msg);
+}
+
+async function excluirCat(id) {
+  if (!confirm('Excluir esta categoria?')) return;
+  const r = await fetch(`/api/categorias/${id}`,{method:'DELETE'});
+  const d = await r.json();
+  if (d.ok) carregarCats(); else alert(d.msg);
+}
+
+carregarPerfil();
+carregarCats();
+</script>
+{% endblock %}

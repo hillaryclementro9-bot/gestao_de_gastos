@@ -1,5 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap');
+
 /* =====================================
-   VELORA - DASHBOARD
+   PAI PEDE - DASHBOARD
 ===================================== */
 
 :root {
@@ -46,9 +48,10 @@ body {
 }
 
 .sidebar-logo {
-    font-size: 23px;
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
     font-weight: 800;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     text-align: center;
     margin-bottom: 35px;
     padding-top: 8px;
@@ -84,13 +87,15 @@ body {
 .sidebar-menu a i { font-size: 15px; width: 18px; text-align: center; }
 
 .sidebar-footer {
-    font-size: 11px;
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
     color: #444;
     text-align: center;
     padding-top: 20px;
     border-top: 1px solid #292929;
     margin-top: 20px;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
 /* HAMBURGER */
@@ -405,14 +410,38 @@ body {
 }
 
 /* APPLE INDICATOR CARD */
-.apple-card { padding: 0; overflow: hidden; }
+.apple-card {
+  padding: 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #111 0%, #1a0a0d 50%, #111 100%);
+  border-color: #2a1a1f;
+}
 
-.apple-card-inner { padding: 20px; height: 100%; display: flex; flex-direction: column; gap: 16px; }
+.apple-card-inner {
+  padding: 28px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+/* subtle radial glow behind apple */
+.apple-card-inner::before {
+  content: '';
+  position: absolute;
+  top: 10px; left: 50%;
+  transform: translateX(-50%);
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(229,9,37,.10) 0%, transparent 70%);
+  pointer-events: none;
+}
 
 .apple-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 24px;
 }
 
 .apple-card-header h2 { font-size: 15px; font-weight: 700; margin: 0; }
@@ -420,118 +449,128 @@ body {
 .apple-period-badge {
   font-size: 11px;
   color: #555;
-  background: #1e1e1e;
-  border: 1px solid #2e2e2e;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
   border-radius: 20px;
-  padding: 3px 10px;
+  padding: 4px 12px;
 }
 
+/* Main body: apple centered, info on right */
 .apple-card-body {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  flex: 1;
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 28px;
+  align-items: center;
 }
 
 .apple-svg-col {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
+  gap: 12px;
 }
 
 .apple-svg-wrap {
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,.55));
-  transition: transform .35s ease;
+  filter: drop-shadow(0 8px 24px rgba(229,9,37,.25)) drop-shadow(0 2px 8px rgba(0,0,0,.7));
+  transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+  cursor: default;
 }
 
-.apple-svg-wrap:hover { transform: scale(1.06) rotate(-3deg); }
+.apple-svg-wrap:hover { transform: scale(1.10) rotate(-4deg); }
 
 .apple-status-badge {
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: .4px;
+  letter-spacing: .5px;
   text-transform: uppercase;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 20px;
   border: 1px solid;
   white-space: nowrap;
+  text-align: center;
 }
 
 .apple-info-col {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  flex: 1;
-  min-width: 0;
+  gap: 18px;
 }
 
 .apple-msg {
-  font-size: 12.5px;
-  color: #aaa;
-  line-height: 1.55;
+  font-size: 13px;
+  color: #888;
+  line-height: 1.6;
 }
 
-.apple-progress-wrap { display: flex; flex-direction: column; gap: 6px; }
+/* Progress */
+.apple-progress-wrap { display: flex; flex-direction: column; gap: 7px; }
 
 .apple-progress-labels {
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  color: #666;
+  color: #555;
 }
 
 .apple-progress-track {
-  height: 7px;
-  background: #2a2a2a;
+  height: 8px;
+  background: #222;
   border-radius: 20px;
   overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.4);
 }
 
 .apple-progress-fill {
   height: 100%;
   border-radius: 20px;
-  transition: width .5s ease;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 0 8px currentColor;
 }
 
 .apple-no-budget {
   font-size: 11px;
-  color: #555;
+  color: #444;
   margin-top: 2px;
 }
 
 .apple-no-budget a { color: var(--red); text-decoration: none; }
 .apple-no-budget a:hover { text-decoration: underline; }
 
+/* Stats row — horizontal 3 columns */
 .apple-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  border-top: 1px solid #222;
-  padding-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  border-top: 1px solid #1e1e1e;
+  padding-top: 16px;
 }
 
 .apple-stat {
+  background: #1a1a1a;
+  border: 1px solid #242424;
+  border-radius: 10px;
+  padding: 10px 12px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .apple-stat-label {
-  font-size: 12px;
-  color: #666;
+  font-size: 10px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: .4px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .apple-stat-value {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
 }
 
-.apple-stat-value.income  { color: var(--green); }
+.apple-stat-value.income  { color: #4ade80; }
 .apple-stat-value.expense { color: #ff354f; }
 
 /* APPLE TUTORIAL MODAL */
@@ -552,111 +591,250 @@ body {
 .atm-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,.82);
-  backdrop-filter: blur(4px);
+  background: rgba(0,0,0,.88);
+  backdrop-filter: blur(6px);
 }
 
 .atm-box {
   position: relative;
-  background: #141414;
-  border: 1px solid #3a1a1f;
-  border-radius: 18px;
-  padding: 32px 28px 26px;
-  max-width: 560px;
+  background: #111;
+  border: 1px solid #2a1a1f;
+  border-radius: 20px;
+  padding: 28px 28px 24px;
+  max-width: 580px;
   width: 100%;
-  max-height: 90vh;
+  max-height: 92vh;
   overflow-y: auto;
-  box-shadow: 0 24px 64px rgba(0,0,0,.7);
-  transform: translateY(20px);
-  transition: transform .32s ease;
+  box-shadow: 0 32px 80px rgba(0,0,0,.8);
+  transform: translateY(24px) scale(.97);
+  transition: transform .35s cubic-bezier(.34,1.56,.64,1);
 }
 
-#apple-tutorial-modal.atm-visible .atm-box { transform: translateY(0); }
+#apple-tutorial-modal.atm-visible .atm-box {
+  transform: translateY(0) scale(1);
+}
+
+/* Header */
+.atm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
 
 .atm-logo {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   color: #fff;
-  margin-bottom: 16px;
-  text-align: center;
 }
 
 .atm-logo span { color: var(--red); }
 
-.atm-box h2 {
-  font-size: 20px;
+.atm-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(229,9,37,.15);
+  border: 1px solid rgba(229,9,37,.3);
+  color: #ff354f;
+}
+
+/* Hero */
+.atm-hero {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #1a0a0d, #161616);
+  border: 1px solid #2a1a1f;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 22px;
+}
+
+.atm-hero-apple {
+  flex-shrink: 0;
+  filter: drop-shadow(0 6px 18px rgba(229,9,37,.3));
+}
+
+.atm-hero-text h2 {
+  font-size: 18px;
   font-weight: 800;
-  text-align: center;
-  margin-bottom: 16px;
+  margin: 0 0 8px;
   color: #fff;
 }
 
-.atm-intro {
+.atm-hero-text p {
   font-size: 13px;
-  color: #aaa;
-  line-height: 1.65;
-  margin-bottom: 24px;
-  text-align: center;
+  color: #888;
+  line-height: 1.6;
+  margin: 0;
 }
 
-.atm-intro strong { color: #ddd; }
+.atm-hero-text strong { color: #ccc; }
 
-.atm-examples {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 26px;
-}
-
-.atm-example {
+/* Divider */
+.atm-divider {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: #1c1c1c;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.atm-divider::before,
+.atm-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #222;
+}
+
+.atm-divider span {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: #444;
+  white-space: nowrap;
+}
+
+/* Steps */
+.atm-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.atm-step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #161616;
+  border: 1px solid #222;
+  border-radius: 14px;
   padding: 14px 16px;
   transition: border-color .2s;
 }
 
-.atm-example:hover { border-color: #3a3a3a; }
+.atm-step:hover { border-color: #333; }
 
-.atm-apple-wrap {
+.atm-step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #222;
+  border: 1px solid #333;
+  color: #555;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  filter: drop-shadow(0 3px 8px rgba(0,0,0,.5));
+  align-self: flex-start;
+  margin-top: 4px;
 }
 
-.atm-example-info { flex: 1; }
+.atm-step-apple { flex-shrink: 0; }
 
-.atm-example-title {
+.atm-step-info { flex: 1; min-width: 0; }
+
+.atm-step-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.atm-step-title {
   font-size: 13px;
   font-weight: 700;
-  margin-bottom: 5px;
+  color: #ddd;
 }
 
-.atm-example-desc {
+.atm-step-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.atm-step-sub {
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+.atm-step-desc {
   font-size: 12px;
   color: #777;
   line-height: 1.5;
+  margin-bottom: 6px;
 }
 
+.atm-step-tip {
+  font-size: 11px;
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.atm-step-tip i { font-size: 10px; }
+
+/* Footer note */
+.atm-footer-note {
+  font-size: 11px;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #161616;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+}
+
+.atm-footer-note i { color: #555; flex-shrink: 0; }
+
+/* Confirm button */
 .atm-btn {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
-  padding: 13px;
+  padding: 14px;
   background: linear-gradient(90deg, #a90019, #ed102f);
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   color: #fff;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   letter-spacing: .3px;
-  transition: opacity .2s, transform .2s;
+  transition: opacity .2s, transform .2s, box-shadow .2s;
+  box-shadow: 0 4px 20px rgba(229,9,37,.3);
 }
 
-.atm-btn:hover { opacity: .9; transform: translateY(-1px); }
+.atm-btn:hover {
+  opacity: .92;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(229,9,37,.45);
+}
+
+.atm-btn:active { transform: translateY(0); }
 
 /* RESPONSIVE */
 @media (max-width: 1100px) {
@@ -676,7 +854,8 @@ body {
 @media (max-width: 600px) {
     .donut-wrap { flex-direction: column; align-items: flex-start; }
     .cards-grid { grid-template-columns: 1fr 1fr; }
-    .apple-card-body { flex-direction: column; align-items: center; }
+    .apple-card-body { grid-template-columns: 1fr; justify-items: center; }
+    .apple-stats { grid-template-columns: 1fr; }
     .apple-svg-col { flex-direction: row; gap: 14px; align-items: center; }
     .atm-box { padding: 22px 16px 20px; }
     .atm-example { flex-direction: column; text-align: center; }

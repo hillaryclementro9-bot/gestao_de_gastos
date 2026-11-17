@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% set active = "transacoes" %}
+{% block title %}Transações{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="hamburger"><i class="fa fa-bars"></i></button>
+    <h1>Transações</h1>
+  </div>
+  <button class="btn btn-red" onclick="abrirModal()"><i class="fa fa-plus"></i> Nova transação</button>
+</div>
+
+<div class="filtros">
+  <input type="text" id="f-busca" placeholder="🔍 Buscar descrição..." oninput="carregar()"/>
+  <input type="month" id="f-mes" onchange="carregar()"/>
+  <select id="f-tipo" onchange="carregar()">
+    <option value="">Todos os tipos</option>
+    <option value="receita">Receita</option>
+    <option value="despesa">Despesa</option>
+  </select>
+  <select id="f-sit" onchange="carregar()">
+    <option value="">Todas situações</option>
+    <option value="pago">Pago</option>
+    <option value="pendente">Pendente</option>
+    <option value="cancelado">Cancelado</option>
+  </select>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>Descrição</th><th>Categoria</th><th>Tipo</th>
+      <th>Data</th><th>Situação</th><th>Valor</th><th>Ações</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">Nova Transação</h2>
+    <input type="hidden" id="m-id"/>
+    <div class="group"><label>Descrição *</label><input type="text" id="m-desc" placeholder="Ex: Supermercado" required/></div>
+    <div class="form-row">
+      <div class="group"><label>Valor *</label><input type="number" id="m-valor" step="0.01" min="0.01" placeholder="0,00" required/></div>
+      <div class="group"><label>Tipo *</label>
+        <select id="m-tipo" onchange="filtrarCats()">
+          <option value="despesa">Despesa</option>
+          <option value="receita">Receita</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="group"><label>Categoria *</label><select id="m-cat"></select></div>
+      <div class="group"><label>Situação</label>
+        <select id="m-sit">
+          <option value="pago">Pago</option>
+          <option value="pendente">Pendente</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="group"><label>Data *</label><input type="date" id="m-data" required/></div>
+      <div class="group"><label>Vencimento</label><input type="date" id="m-venc"/></div>
+    </div>
+    <div class="form-row">
+      <div class="group"><label>Conta</label><select id="m-conta"><option value="">Sem conta</option></select></div>
+      <div class="group"><label>Cartão</label><select id="m-cartao"><option value="">Sem cartão</option></select></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-red" onclick="salvar()"><i class="fa fa-floppy-disk"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let todasCats = [];
+const fmt = v => 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtD = d => { if(!d)return'—'; const[y,m,day]=d.split('-'); return`${day}/${m}/${y}`; };
+
+async function carregar() {
+  const p = new URLSearchParams();
+  const mes = document.getElementById('f-mes').value;
+  const tipo = document.getElementById('f-tipo').value;
+  const sit  = document.getElementById('f-sit').value;
+  const busca= document.getElementById('f-busca').value;
+  if(mes)  p.set('mes',mes);
+  if(tipo) p.set('tipo',tipo);
+  if(sit)  p.set('situacao',sit);
+  if(busca)p.set('busca',busca);
+  const r = await fetch('/api/transacoes?'+p);
+  const d = await r.json();
+  const tb = document.getElementById('tbody');
+  if (!d.data?.length) { tb.innerHTML='<tr class="empty-row"><td colspan="7">Nenhuma transação encontrada</td></tr>'; return; }
+  tb.innerHTML = d.data.map(t=>`
+    <tr>
+      <td data-label="Descrição"><strong>${t.descricao}</strong>${t.conta_nome?`<br><small style="color:#444">${t.conta_nome}</small>`:''}</td>
+      <td data-label="Categoria">${t.categoria_nome||'—'}</td>
+      <td data-label="Tipo"><span class="badge ${t.tipo}">${t.tipo}</span></td>
+      <td data-label="Data">${fmtD(t.data_transacao)}</td>
+      <td data-label="Situação"><span class="badge ${t.situacao}">${t.situacao}</span></td>
+      <td data-label="Valor"><span class="${t.tipo==='receita'?'val-pos':'val-neg'}">${t.tipo==='receita'?'+':'-'} ${fmt(t.valor)}</span></td>
+      <td>
+        <button class="btn-icon edit" onclick='editar(${JSON.stringify(t)})'><i class="fa fa-pen"></i></button>
+        <button class="btn-icon del" onclick="excluir(${t.id_transacao})"><i class="fa fa-trash"></i></button>
+      </td>
+    </tr>`).join('');
+}
+
+async function carregarSelects() {
+  const [rc, rco, rca] = await Promise.all([
+    fetch('/api/categorias'), fetch('/api/contas'), fetch('/api/cartoes')
+  ]);
+  todasCats = (await rc.json()).data || [];
+  const contas  = (await rco.json()).data || [];
+  const cartoes = (await rca.json()).data || [];
+
+  const sc = document.getElementById('m-conta');
+  sc.innerHTML = '<option value="">Sem conta</option>' + contas.map(c=>`<option value="${c.id_conta}">${c.nome}</option>`).join('');
+  const sca = document.getElementById('m-cartao');
+  sca.innerHTML = '<option value="">Sem cartão</option>' + cartoes.map(c=>`<option value="${c.id_cartao}">${c.nome}</option>`).join('');
+  filtrarCats();
+}
+
+function filtrarCats() {
+  const tipo = document.getElementById('m-tipo').value;
+  const sc = document.getElementById('m-cat');
+  const filtradas = todasCats.filter(c => c.tipo === tipo);
+  sc.innerHTML = filtradas.map(c=>`<option value="${c.id_categoria}">${c.nome}</option>`).join('');
+}
+
+function abrirModal(t=null) {
+  document.getElementById('m-id').value    = t?.id_transacao||'';
+  document.getElementById('m-desc').value  = t?.descricao||'';
+  document.getElementById('m-valor').value = t?.valor||'';
+  document.getElementById('m-tipo').value  = t?.tipo||'despesa';
+  document.getElementById('m-data').value  = t?.data_transacao||new Date().toISOString().slice(0,10);
+  document.getElementById('m-venc').value  = t?.data_vencimento||'';
+  document.getElementById('m-sit').value   = t?.situacao||'pago';
+  filtrarCats();
+  setTimeout(()=>{
+    if(t?.id_categoria) document.getElementById('m-cat').value = t.id_categoria;
+    if(t?.id_conta)     document.getElementById('m-conta').value = t.id_conta;
+    if(t?.id_cartao)    document.getElementById('m-cartao').value = t.id_cartao;
+  },50);
+  document.getElementById('modal-title').textContent = t ? 'Editar Transação' : 'Nova Transação';
+  document.getElementById('modal').classList.add('open');
+}
+function editar(t) { abrirModal(t); }
+function fecharModal() { document.getElementById('modal').classList.remove('open'); }
+
+async function salvar() {
+  const id = document.getElementById('m-id').value;
+  const body = {
+    id_categoria: document.getElementById('m-cat').value,
+    descricao:    document.getElementById('m-desc').value.trim(),
+    valor:        document.getElementById('m-valor').value,
+    tipo:         document.getElementById('m-tipo').value,
+    data_transacao: document.getElementById('m-data').value,
+    data_vencimento: document.getElementById('m-venc').value||null,
+    situacao:     document.getElementById('m-sit').value,
+    id_conta:     document.getElementById('m-conta').value||null,
+    id_cartao:    document.getElementById('m-cartao').value||null,
+  };
+  if (!body.descricao||!body.valor||!body.data_transacao||!body.id_categoria) { alert('Preencha os campos obrigatórios.'); return; }
+  const url = id ? `/api/transacoes/${id}` : '/api/transacoes';
+  const method = id ? 'PUT' : 'POST';
+  const r = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  const d = await r.json();
+  if (d.ok) { fecharModal(); carregar(); } else alert(d.msg);
+}
+
+async function excluir(id) {
+  if (!confirm('Excluir esta transação?')) return;
+  await fetch(`/api/transacoes/${id}`, {method:'DELETE'});
+  carregar();
+}
+
+document.getElementById('f-mes').value = new Date().toISOString().slice(0,7);
+carregarSelects();
+carregar();
+</script>
+{% endblock %}

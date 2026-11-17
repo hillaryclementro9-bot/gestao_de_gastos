@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% set active = "contas" %}
+{% block title %}Cartões e Contas{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="hamburger"><i class="fa fa-bars"></i></button>
+    <h1>Cartões e Contas</h1>
+  </div>
+  <button class="btn btn-red" id="btn-novo" onclick="abrirModal()"><i class="fa fa-plus"></i> <span id="btn-txt">Nova conta</span></button>
+</div>
+
+<div style="display:flex;gap:0;border-bottom:1px solid #1e1e1e;margin-bottom:24px">
+  <div class="tab active" id="tab-contas" onclick="switchTab('contas')" style="padding:11px 24px;font-size:14px;font-weight:600;color:#e50925;cursor:pointer;border-bottom:2px solid #e50925">
+    <i class="fa fa-building-columns"></i> Contas bancárias
+  </div>
+  <div class="tab" id="tab-cartoes" onclick="switchTab('cartoes')" style="padding:11px 24px;font-size:14px;font-weight:600;color:#444;cursor:pointer;border-bottom:2px solid transparent">
+    <i class="fa fa-credit-card"></i> Cartões
+  </div>
+</div>
+
+<div id="panel-contas"><div class="grid-auto" id="grid-contas"></div></div>
+<div id="panel-cartoes" style="display:none"><div class="grid-auto" id="grid-cartoes"></div></div>
+
+<!-- MODAL CONTA -->
+<div class="modal-bg" id="modal-conta">
+  <div class="modal">
+    <h2 id="mc-title">Nova Conta</h2>
+    <input type="hidden" id="mc-id"/>
+    <div class="group"><label>Nome *</label><input type="text" id="mc-nome" placeholder="Ex: Nubank"/></div>
+    <div class="group"><label>Instituição</label><input type="text" id="mc-inst" placeholder="Ex: Nubank"/></div>
+    <div class="form-row">
+      <div class="group"><label>Tipo</label>
+        <select id="mc-tipo">
+          <option value="corrente">Corrente</option><option value="poupanca">Poupança</option>
+          <option value="investimento">Investimento</option><option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="group"><label>Saldo inicial</label><input type="number" id="mc-saldo" step="0.01" value="0"/></div>
+    </div>
+    <div class="group"><label>Data do saldo</label><input type="date" id="mc-data"/></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="fecharModal('conta')">Cancelar</button>
+      <button class="btn btn-red" onclick="salvarConta()"><i class="fa fa-floppy-disk"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CARTÃO -->
+<div class="modal-bg" id="modal-cartao">
+  <div class="modal">
+    <h2 id="mca-title">Novo Cartão</h2>
+    <input type="hidden" id="mca-id"/>
+    <div class="group"><label>Nome *</label><input type="text" id="mca-nome" placeholder="Ex: Visa Gold"/></div>
+    <div class="form-row">
+      <div class="group"><label>Últimos 4 dígitos</label><input type="text" id="mca-dig" maxlength="4" placeholder="0000"/></div>
+      <div class="group"><label>Limite total</label><input type="number" id="mca-limite" step="0.01" value="0"/></div>
+    </div>
+    <div class="form-row">
+      <div class="group"><label>Dia fechamento</label><input type="number" id="mca-fech" min="1" max="31" value="1"/></div>
+      <div class="group"><label>Dia vencimento</label><input type="number" id="mca-venc" min="1" max="31" value="10"/></div>
+    </div>
+    <div class="group"><label>Conta associada</label><select id="mca-conta"><option value="">Nenhuma</option></select></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="fecharModal('cartao')">Cancelar</button>
+      <button class="btn btn-red" onclick="salvarCartao()"><i class="fa fa-floppy-disk"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let abaAtual = 'contas';
+const fmt = v => 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+function switchTab(aba) {
+  abaAtual = aba;
+  document.getElementById('panel-contas').style.display  = aba==='contas'  ? '' : 'none';
+  document.getElementById('panel-cartoes').style.display = aba==='cartoes' ? '' : 'none';
+  document.getElementById('tab-contas').style.color  = aba==='contas'  ? '#e50925' : '#444';
+  document.getElementById('tab-contas').style.borderBottomColor  = aba==='contas'  ? '#e50925' : 'transparent';
+  document.getElementById('tab-cartoes').style.color = aba==='cartoes' ? '#e50925' : '#444';
+  document.getElementById('tab-cartoes').style.borderBottomColor = aba==='cartoes' ? '#e50925' : 'transparent';
+  document.getElementById('btn-txt').textContent = aba==='contas' ? 'Nova conta' : 'Novo cartão';
+  if(aba==='contas') carregarContas(); else carregarCartoes();
+}
+
+function abrirModal(item=null) {
+  if (abaAtual==='contas') {
+    document.getElementById('mc-id').value    = item?.id_conta||'';
+    document.getElementById('mc-nome').value  = item?.nome||'';
+    document.getElementById('mc-inst').value  = item?.instituicao||'';
+    document.getElementById('mc-tipo').value  = item?.tipo_conta||'corrente';
+    document.getElementById('mc-saldo').value = item?.saldo_inicial||0;
+    document.getElementById('mc-data').value  = item?.data_saldo_inicial||'';
+    document.getElementById('mc-title').textContent = item ? 'Editar Conta' : 'Nova Conta';
+    document.getElementById('modal-conta').classList.add('open');
+  } else {
+    document.getElementById('mca-id').value     = item?.id_cartao||'';
+    document.getElementById('mca-nome').value   = item?.nome||'';
+    document.getElementById('mca-dig').value    = item?.ultimos_4_digitos||'';
+    document.getElementById('mca-limite').value = item?.limite_total||0;
+    document.getElementById('mca-fech').value   = item?.dia_fechamento||1;
+    document.getElementById('mca-venc').value   = item?.dia_vencimento||10;
+    setTimeout(()=>{ document.getElementById('mca-conta').value = item?.id_conta||''; },50);
+    document.getElementById('mca-title').textContent = item ? 'Editar Cartão' : 'Novo Cartão';
+    document.getElementById('modal-cartao').classList.add('open');
+  }
+}
+function fecharModal(t) { document.getElementById('modal-'+t).classList.remove('open'); }
+
+async function carregarContas() {
+  const r = await fetch('/api/contas');
+  const d = await r.json();
+  const g = document.getElementById('grid-contas');
+  if (!d.data?.length) { g.innerHTML='<div style="color:#333;font-size:14px;padding:40px">Nenhuma conta cadastrada</div>'; return; }
+  g.innerHTML = d.data.map(c=>`
+    <div class="card" style="position:relative">
+      <div style="position:absolute;top:14px;right:14px;display:flex;gap:6px">
+        <button class="btn-icon edit" onclick='abrirModal(${JSON.stringify(c)})'><i class="fa fa-pen"></i></button>
+        <button class="btn-icon del" onclick="excluirConta(${c.id_conta})"><i class="fa fa-trash"></i></button>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:42px;height:42px;border-radius:11px;background:rgba(229,9,37,.1);display:flex;align-items:center;justify-content:center;color:#e50925;font-size:17px"><i class="fa fa-building-columns"></i></div>
+        <div><div style="font-size:15px;font-weight:700">${c.nome}</div><div style="font-size:12px;color:#555">${c.instituicao||c.tipo_conta}</div></div>
+      </div>
+      <div style="font-size:24px;font-weight:800;color:#3b82f6">${fmt(c.saldo_inicial)}</div>
+      <div style="font-size:12px;color:#444;margin-top:3px">Saldo inicial · ${c.tipo_conta}</div>
+    </div>`).join('');
+}
+
+async function carregarCartoes() {
+  const [rc, rco] = await Promise.all([fetch('/api/cartoes'), fetch('/api/contas')]);
+  const cartoes = (await rc.json()).data || [];
+  const contas  = (await rco.json()).data || [];
+  const sc = document.getElementById('mca-conta');
+  sc.innerHTML = '<option value="">Nenhuma</option>' + contas.map(c=>`<option value="${c.id_conta}">${c.nome}</option>`).join('');
+  const g = document.getElementById('grid-cartoes');
+  if (!cartoes.length) { g.innerHTML='<div style="color:#333;font-size:14px;padding:40px">Nenhum cartão cadastrado</div>'; return; }
+  g.innerHTML = cartoes.map(c=>`
+    <div class="card" style="position:relative">
+      <div style="position:absolute;top:14px;right:14px;display:flex;gap:6px">
+        <button class="btn-icon edit" onclick='abrirModal(${JSON.stringify(c)})'><i class="fa fa-pen"></i></button>
+        <button class="btn-icon del" onclick="excluirCartao(${c.id_cartao})"><i class="fa fa-trash"></i></button>
+      </div>
+      <div style="background:linear-gradient(135deg,#1e1e1e,#2a2a2a);border-radius:14px;padding:20px;margin-bottom:12px;position:relative;overflow:hidden;min-height:140px">
+        <div style="position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(229,9,37,.06);top:-60px;right:-60px"></div>
+        <div style="width:34px;height:26px;background:linear-gradient(135deg,#d4a017,#f0c040);border-radius:4px;margin-bottom:18px"></div>
+        <div style="font-size:15px;letter-spacing:3px;color:#ccc;margin-bottom:14px">•••• •••• •••• ${c.ultimos_4_digitos||'????'}</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end">
+          <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px">${c.nome}</div>
+          <div style="text-align:right;font-size:11px;color:#666">Fecha dia ${c.dia_fechamento}<br>Vence dia ${c.dia_vencimento}</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px">
+        <div><div style="color:#555;font-size:11px">Limite total</div><div style="font-weight:700">${fmt(c.limite_total)}</div></div>
+        <div><div style="color:#555;font-size:11px">Fatura atual</div><div style="font-weight:700;color:#e50925">${fmt(c.fatura_atual)}</div></div>
+        <div><div style="color:#555;font-size:11px">Disponível</div><div style="font-weight:700;color:#22c55e">${fmt(c.limite_total - c.fatura_atual)}</div></div>
+      </div>
+    </div>`).join('');
+}
+
+async function salvarConta() {
+  const id = document.getElementById('mc-id').value;
+  const body = {nome:document.getElementById('mc-nome').value.trim(),instituicao:document.getElementById('mc-inst').value,
+    tipo_conta:document.getElementById('mc-tipo').value,saldo_inicial:document.getElementById('mc-saldo').value,
+    data_saldo_inicial:document.getElementById('mc-data').value||null};
+  if (!body.nome) { alert('Informe o nome.'); return; }
+  const url = id ? `/api/contas/${id}` : '/api/contas';
+  const r = await fetch(url, {method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d = await r.json();
+  if (d.ok) { fecharModal('conta'); carregarContas(); } else alert(d.msg);
+}
+
+async function salvarCartao() {
+  const id = document.getElementById('mca-id').value;
+  const body = {nome:document.getElementById('mca-nome').value.trim(),ultimos_4_digitos:document.getElementById('mca-dig').value,
+    limite_total:document.getElementById('mca-limite').value,dia_fechamento:document.getElementById('mca-fech').value,
+    dia_vencimento:document.getElementById('mca-venc').value,id_conta:document.getElementById('mca-conta').value||null};
+  if (!body.nome) { alert('Informe o nome.'); return; }
+  const url = id ? `/api/cartoes/${id}` : '/api/cartoes';
+  const r = await fetch(url, {method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d = await r.json();
+  if (d.ok) { fecharModal('cartao'); carregarCartoes(); } else alert(d.msg);
+}
+
+async function excluirConta(id) { if(!confirm('Excluir?'))return; await fetch(`/api/contas/${id}`,{method:'DELETE'}); carregarContas(); }
+async function excluirCartao(id) { if(!confirm('Excluir?'))return; await fetch(`/api/cartoes/${id}`,{method:'DELETE'}); carregarCartoes(); }
+
+carregarContas();
+</script>
+{% endblock %}

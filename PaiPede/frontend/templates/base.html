@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PAI PEDE — {% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  {% block head %}{% endblock %}
+</head>
+<body>
+<div class="overlay" id="overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="logo-hex">P</div>
+    <span class="logo-name">PAI PEDE</span>
+  </div>
+  <nav>
+    <ul>
+      <li class="{% if active=='dashboard' %}active{% endif %}">
+        <a href="/visao-geral"><i class="fa fa-chart-pie"></i> Visão geral</a>
+      </li>
+      <li class="{% if active=='transacoes' %}active{% endif %}">
+        <a href="/transacoes"><i class="fa fa-arrow-right-arrow-left"></i> Transações</a>
+      </li>
+      <li class="{% if active=='contas' %}active{% endif %}">
+        <a href="/cartoes-contas"><i class="fa fa-credit-card"></i> Cartões e contas</a>
+      </li>
+      <li class="{% if active=='faturas' %}active{% endif %}">
+        <a href="/faturas"><i class="fa fa-file-invoice-dollar"></i> Faturas</a>
+      </li>
+      <li class="{% if active=='planejamento' %}active{% endif %}">
+        <a href="/planejamento"><i class="fa fa-bullseye"></i> Planejamento</a>
+      </li>
+      <li class="{% if active=='config' %}active{% endif %}">
+        <a href="/configuracoes"><i class="fa fa-sliders"></i> Configurações</a>
+      </li>
+    </ul>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-avatar">{{ nome[0]|upper if nome else 'U' }}</div>
+      <div>
+        <div class="sb-name">{{ nome }}</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()">
+      <i class="fa fa-right-from-bracket"></i> Sair
+    </button>
+  </div>
+</aside>
+
+<main class="main">
+  {% block content %}{% endblock %}
+</main>
+
+<script>
+async function logout() {
+  await fetch('/api/logout', {method:'POST'});
+  window.location.href = '/';
+}
+document.getElementById('hamburger')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+});
+document.getElementById('overlay')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+});
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

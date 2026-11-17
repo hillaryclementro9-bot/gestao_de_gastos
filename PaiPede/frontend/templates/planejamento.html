@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% set active = "planejamento" %}
+{% block title %}Planejamento{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="hamburger"><i class="fa fa-bars"></i></button>
+    <h1>Planejamento e Metas</h1>
+  </div>
+  <input type="month" id="mesSel" onchange="carregarOrc()"
+    style="background:#1a1a1a;border:1px solid #1e1e1e;border-radius:8px;color:#fff;padding:8px 12px;font-size:13px;outline:none"/>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px">
+  <!-- ORÇAMENTOS -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-size:15px;font-weight:700"><i class="fa fa-chart-bar" style="color:#e50925"></i> Orçamentos mensais</div>
+      <button class="btn btn-red btn-sm" onclick="abrirModalOrc()"><i class="fa fa-plus"></i> Novo</button>
+    </div>
+    <div id="lista-orc"><div style="color:#333;font-size:13px;text-align:center;padding:20px">Nenhum orçamento</div></div>
+  </div>
+  <!-- METAS -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-size:15px;font-weight:700"><i class="fa fa-bullseye" style="color:#e50925"></i> Metas financeiras</div>
+      <button class="btn btn-red btn-sm" onclick="abrirModalMeta()"><i class="fa fa-plus"></i> Nova</button>
+    </div>
+    <div id="lista-metas"><div style="color:#333;font-size:13px;text-align:center;padding:20px">Nenhuma meta</div></div>
+  </div>
+</div>
+
+<!-- DICAS -->
+<div style="background:rgba(229,9,37,.05);border:1px solid rgba(229,9,37,.15);border-radius:14px;padding:22px">
+  <div style="font-size:14px;font-weight:700;color:#e50925;margin-bottom:12px"><i class="fa fa-lightbulb"></i> Sugestões para economizar</div>
+  <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#888;line-height:1.5">
+    <div><i class="fa fa-circle-check" style="color:#e50925;margin-right:8px"></i>Regra 50/30/20: 50% necessidades, 30% desejos, 20% poupança e metas.</div>
+    <div><i class="fa fa-circle-check" style="color:#e50925;margin-right:8px"></i>Revise assinaturas mensais — serviços não usados são dinheiro desperdiçado.</div>
+    <div><i class="fa fa-circle-check" style="color:#e50925;margin-right:8px"></i>Automatize depósitos nas metas logo após receber o salário.</div>
+    <div><i class="fa fa-circle-check" style="color:#e50925;margin-right:8px"></i>Compare preços antes de compras acima de R$ 100.</div>
+  </div>
+</div>
+
+<!-- MODAL ORÇAMENTO -->
+<div class="modal-bg" id="modal-orc">
+  <div class="modal">
+    <h2>Novo Orçamento</h2>
+    <input type="hidden" id="mo-id"/>
+    <div class="group"><label>Categoria</label><select id="mo-cat"><option value="">Geral</option></select></div>
+    <div class="form-row">
+      <div class="group"><label>Mês *</label><input type="month" id="mo-mes"/></div>
+      <div class="group"><label>Limite (R$) *</label><input type="number" id="mo-limite" step="0.01" min="0.01" placeholder="0,00"/></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="fecharModal('orc')">Cancelar</button>
+      <button class="btn btn-red" onclick="salvarOrc()"><i class="fa fa-floppy-disk"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL META -->
+<div class="modal-bg" id="modal-meta">
+  <div class="modal">
+    <h2 id="mm-title">Nova Meta</h2>
+    <input type="hidden" id="mm-id"/>
+    <div class="group"><label>Nome *</label><input type="text" id="mm-nome" placeholder="Ex: Viagem"/></div>
+    <div class="form-row">
+      <div class="group"><label>Valor alvo *</label><input type="number" id="mm-alvo" step="0.01" min="0.01" placeholder="0,00"/></div>
+      <div class="group"><label>Já acumulado</label><input type="number" id="mm-acum" step="0.01" value="0"/></div>
+    </div>
+    <div class="group"><label>Data limite</label><input type="date" id="mm-data"/></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="fecharModal('meta')">Cancelar</button>
+      <button class="btn btn-red" onclick="salvarMeta()"><i class="fa fa-floppy-disk"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const fmt = v => 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtD = d => { if(!d)return'—'; const[y,m,day]=d.split('-'); return`${day}/${m}/${y}`; };
+
+async function carregarOrc() {
+  const mes = document.getElementById('mesSel').value;
+  const r = await fetch(`/api/orcamentos?mes=${mes}`);
+  const d = await r.json();
+  const el = document.getElementById('lista-orc');
+  if (!d.data?.length) { el.innerHTML='<div style="color:#333;font-size:13px;text-align:center;padding:20px">Nenhum orçamento para este mês</div>'; return; }
+  el.innerHTML = d.data.map(o => {
+    const pct = Math.min(100, o.valor_limite > 0 ? (o.gasto/o.valor_limite)*100 : 0);
+    const cor = pct < 70 ? 'green' : pct < 90 ? 'yellow' : 'red';
+    return `<div style="padding:12px 0;border-bottom:1px solid #161616">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:13px;font-weight:600">${o.categoria_nome||'Geral'}</span>
+        <span style="font-size:12px;font-weight:700;color:${pct>=90?'#e50925':pct>=70?'#f59e0b':'#22c55e'}">${Math.round(pct)}%</span>
+      </div>
+      <div class="progress"><div class="progress-bar ${cor}" style="width:${pct}%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#444;margin-top:3px">
+        <span>${fmt(o.gasto)} gasto</span><span>Limite: ${fmt(o.valor_limite)}</span>
+      </div>
+      <button class="btn-icon del" onclick="excluirOrc(${o.id_orcamento})" style="margin-top:4px"><i class="fa fa-trash"></i></button>
+    </div>`;
+  }).join('');
+}
+
+async function carregarMetas() {
+  const r = await fetch('/api/metas');
+  const d = await r.json();
+  const el = document.getElementById('lista-metas');
+  if (!d.data?.length) { el.innerHTML='<div style="color:#333;font-size:13px;text-align:center;padding:20px">Nenhuma meta</div>'; return; }
+  el.innerHTML = d.data.map(m => {
+    const pct = Math.min(100, m.valor_alvo > 0 ? (m.valor_acumulado/m.valor_alvo)*100 : 0);
+    const cor = pct >= 100 ? 'green' : pct >= 60 ? 'yellow' : 'red';
+    return `<div style="padding:12px 0;border-bottom:1px solid #161616">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:13px;font-weight:600">${m.nome}</span>
+        <span style="font-size:12px;font-weight:700;color:#e50925">${Math.round(pct)}%</span>
+      </div>
+      <div class="progress"><div class="progress-bar ${cor}" style="width:${pct}%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#444;margin-top:3px">
+        <span>${fmt(m.valor_acumulado)} de ${fmt(m.valor_alvo)}</span><span>Prazo: ${fmtD(m.data_limite)}</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <button class="btn btn-sm" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:#22c55e;padding:5px 12px;font-size:12px" onclick="depositar(${m.id_meta})"><i class="fa fa-plus"></i> Depositar</button>
+        <button class="btn-icon edit" onclick='abrirModalMeta(${JSON.stringify(m)})'><i class="fa fa-pen"></i></button>
+        <button class="btn-icon del" onclick="excluirMeta(${m.id_meta})"><i class="fa fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function carregarCats() {
+  const r = await fetch('/api/categorias');
+  const d = await r.json();
+  const s = document.getElementById('mo-cat');
+  s.innerHTML = '<option value="">Geral</option>' + (d.data||[]).filter(c=>c.tipo==='despesa').map(c=>`<option value="${c.id_categoria}">${c.nome}</option>`).join('');
+}
+
+function abrirModalOrc() {
+  document.getElementById('mo-id').value = '';
+  document.getElementById('mo-mes').value = document.getElementById('mesSel').value;
+  document.getElementById('mo-limite').value = '';
+  document.getElementById('modal-orc').classList.add('open');
+}
+function abrirModalMeta(m=null) {
+  document.getElementById('mm-id').value   = m?.id_meta||'';
+  document.getElementById('mm-nome').value = m?.nome||'';
+  document.getElementById('mm-alvo').value = m?.valor_alvo||'';
+  document.getElementById('mm-acum').value = m?.valor_acumulado||0;
+  document.getElementById('mm-data').value = m?.data_limite||'';
+  document.getElementById('mm-title').textContent = m ? 'Editar Meta' : 'Nova Meta';
+  document.getElementById('modal-meta').classList.add('open');
+}
+function fecharModal(t) { document.getElementById('modal-'+t).classList.remove('open'); }
+
+async function salvarOrc() {
+  const id = document.getElementById('mo-id').value;
+  const body = {id_categoria:document.getElementById('mo-cat').value||null,
+    mes_referencia:document.getElementById('mo-mes').value,valor_limite:document.getElementById('mo-limite').value};
+  if (!body.mes_referencia||!body.valor_limite) { alert('Preencha mês e limite.'); return; }
+  const url = id ? `/api/orcamentos/${id}` : '/api/orcamentos';
+  const r = await fetch(url,{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d = await r.json();
+  if (d.ok) { fecharModal('orc'); carregarOrc(); } else alert(d.msg);
+}
+
+async function salvarMeta() {
+  const id = document.getElementById('mm-id').value;
+  const body = {nome:document.getElementById('mm-nome').value.trim(),valor_alvo:document.getElementById('mm-alvo').value,
+    valor_acumulado:document.getElementById('mm-acum').value||0,data_limite:document.getElementById('mm-data').value||null};
+  if (!body.nome||!body.valor_alvo) { alert('Preencha nome e valor alvo.'); return; }
+  const url = id ? `/api/metas/${id}` : '/api/metas';
+  const r = await fetch(url,{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d = await r.json();
+  if (d.ok) { fecharModal('meta'); carregarMetas(); } else alert(d.msg);
+}
+
+async function depositar(id) {
+  const v = prompt('Valor a depositar (R$):');
+  if (!v||isNaN(v)||parseFloat(v)<=0) return;
+  await fetch(`/api/metas/${id}/depositar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({valor:parseFloat(v)})});
+  carregarMetas();
+}
+async function excluirOrc(id) { if(!confirm('Excluir?'))return; await fetch(`/api/orcamentos/${id}`,{method:'DELETE'}); carregarOrc(); }
+async function excluirMeta(id) { if(!confirm('Excluir?'))return; await fetch(`/api/metas/${id}`,{method:'DELETE'}); carregarMetas(); }
+
+document.getElementById('mesSel').value = new Date().toISOString().slice(0,7);
+carregarCats(); carregarOrc(); carregarMetas();
+</script>
+{% endblock %}

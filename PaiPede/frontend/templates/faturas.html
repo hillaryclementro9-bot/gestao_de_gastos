@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% set active = "faturas" %}
+{% block title %}Faturas{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" id="hamburger"><i class="fa fa-bars"></i></button>
+    <h1>Faturas e Contas a Pagar</h1>
+  </div>
+  <button class="btn btn-red" onclick="abrirModal()"><i class="fa fa-plus"></i> Nova fatura</button>
+</div>
+
+<div id="alertas-box" style="margin-bottom:16px"></div>
+
+<div class="filtros">
+  <input type="month" id="f-mes" onchange="carregar()"/>
+  <select id="f-sit" onchange="carregar()">
+    <option value="">Todas situações</option>
+    <option value="Pendente">Pendente</option>
+    <option value="Pago">Pago</option>
+    <option value="Vencido">Vencido</option>
+  </select>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Cartão</th><th>Competência</th><th>Fechamento</th><th>Vencimento</th><th>Pagamento</th><th>Situação</th><th>Ações</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">Nova Fatura</h2>
+    <input type="hidden" id="m-id"/>
+    <div class="group"><label>Cartão *</label><select id="m-cartao"><option value="">Selecione...</option></select></div>
+    <div class="group"><label>Competência *</label><input type="month" id="m-comp"/></div>
+    <div class="form-row">
+      <div class="group"><label>Fechamento</label><input type="date" id="m-fech"/></div>
+      <div class="group"><label>Vencimento</label><input type="date" id="m-venc"/></div>
+    </div>
+    <div class="form-row">
+      <div class="group"><label>Pagamento</label><input type="date" id="m-pag"/></div>
+      <div class="group"><label>Situação</label>
+        <select id="m-sit"><option value="Pendente">Pendente</option><option value="Pago">Pago</option></select>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-red" onclick="salvar()"><i class="fa fa-floppy-disk"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const fmtD = d => { if(!d)return'—'; const[y,m,day]=d.split('-'); return`${day}/${m}/${y}`; };
+
+async function carregar() {
+  const r = await fetch('/api/faturas');
+  const d = await r.json();
+  const tb = document.getElementById('tbody');
+  const ab = document.getElementById('alertas-box');
+  ab.innerHTML = '';
+  const mes = document.getElementById('f-mes').value;
+  const sit = document.getElementById('f-sit').value;
+  let rows = d.data || [];
+  if (mes) rows = rows.filter(f => f.competencia === mes);
+  if (sit) rows = rows.filter(f => f.situacao === sit);
+  if (!rows.length) { tb.innerHTML='<tr class="empty-row"><td colspan="7">Nenhuma fatura encontrada</td></tr>'; return; }
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  rows.forEach(f => {
+    const venc = f.data_vencimento ? new Date(f.data_vencimento+'T00:00:00') : null;
+    const diff = venc ? Math.ceil((venc-hoje)/(86400000)) : null;
+    if (f.situacao !== 'Pago' && diff !== null) {
+      if (diff < 0) ab.innerHTML += `<div class="alerta danger"><i class="fa fa-triangle-exclamation"></i> Fatura ${f.cartao_nome} (${f.competencia}) VENCIDA há ${Math.abs(diff)} dia(s)!</div>`;
+      else if (diff <= 5) ab.innerHTML += `<div class="alerta warn"><i class="fa fa-triangle-exclamation"></i> Fatura ${f.cartao_nome} (${f.competencia}) vence em ${diff} dia(s).</div>`;
+    }
+  });
+  tb.innerHTML = rows.map(f=>`
+    <tr>
+      <td data-label="Cartão"><strong>${f.cartao_nome}</strong></td>
+      <td data-label="Competência">${f.competencia}</td>
+      <td data-label="Fechamento">${fmtD(f.data_fechamento)}</td>
+      <td data-label="Vencimento">${fmtD(f.data_vencimento)}</td>
+      <td data-label="Pagamento">${fmtD(f.data_pagamento)||'—'}</td>
+      <td data-label="Situação"><span class="badge ${f.situacao}">${f.situacao}</span></td>
+      <td>
+        ${f.situacao!=='Pago'?`<button class="btn-icon pay" onclick="pagar(${f.id_fatura})" title="Pagar"><i class="fa fa-check"></i></button>`:''}
+        <button class="btn-icon del" onclick="excluir(${f.id_fatura})"><i class="fa fa-trash"></i></button>
+      </td>
+    </tr>`).join('');
+}
+
+async function carregarCartoes() {
+  const r = await fetch('/api/cartoes');
+  const d = await r.json();
+  const s = document.getElementById('m-cartao');
+  s.innerHTML = '<option value="">Selecione...</option>' + (d.data||[]).map(c=>`<option value="${c.id_cartao}">${c.nome}</option>`).join('');
+}
+
+function abrirModal() {
+  document.getElementById('m-id').value   = '';
+  document.getElementById('m-comp').value = new Date().toISOString().slice(0,7);
+  document.getElementById('m-fech').value = '';
+  document.getElementById('m-venc').value = '';
+  document.getElementById('m-pag').value  = '';
+  document.getElementById('m-sit').value  = 'Pendente';
+  document.getElementById('modal').classList.add('open');
+}
+function fecharModal() { document.getElementById('modal').classList.remove('open'); }
+
+async function salvar() {
+  const id = document.getElementById('m-id').value;
+  const body = {id_cartao:document.getElementById('m-cartao').value,competencia:document.getElementById('m-comp').value,
+    data_fechamento:document.getElementById('m-fech').value||null,data_vencimento:document.getElementById('m-venc').value||null,
+    data_pagamento:document.getElementById('m-pag').value||null,situacao:document.getElementById('m-sit').value};
+  if (!body.id_cartao||!body.competencia) { alert('Selecione cartão e competência.'); return; }
+  const url = id ? `/api/faturas/${id}` : '/api/faturas';
+  const r = await fetch(url,{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d = await r.json();
+  if (d.ok) { fecharModal(); carregar(); } else alert(d.msg);
+}
+
+async function pagar(id) {
+  const dt = prompt('Data do pagamento (AAAA-MM-DD):', new Date().toISOString().slice(0,10));
+  if (!dt) return;
+  await fetch(`/api/faturas/${id}/pagar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data_pagamento:dt})});
+  carregar();
+}
+async function excluir(id) { if(!confirm('Excluir?'))return; await fetch(`/api/faturas/${id}`,{method:'DELETE'}); carregar(); }
+
+document.getElementById('f-mes').value = new Date().toISOString().slice(0,7);
+carregarCartoes();
+carregar();
+</script>
+{% endblock %}

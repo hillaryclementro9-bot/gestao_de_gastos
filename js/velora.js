@@ -1,5 +1,5 @@
 /* =====================================================
-   VELORA — Core Module
+   PAI PEDE — Core Module
    Shared across all authenticated pages
 ===================================================== */
 
@@ -46,8 +46,20 @@ const VELORA = (() => {
     tutorials:    'velora_tutorials',
   };
 
-  function get(key)      { return JSON.parse(localStorage.getItem(key) || 'null'); }
-  function set(key, val) { localStorage.setItem(key, JSON.stringify(val)); broadcast(); }
+  // Prefix keys with user ID so each user has isolated data
+  function _uid() {
+    const s = JSON.parse(localStorage.getItem('velora_session') || 'null');
+    return (s && (s.id || s.email)) || 'guest';
+  }
+
+  function _k(key) {
+    // Global keys (shared across users) stay unprefixed
+    if (key === KEYS.users || key === KEYS.session || key === KEYS.tutorials) return key;
+    return `${_uid()}__${key}`;
+  }
+
+  function get(key)      { return JSON.parse(localStorage.getItem(_k(key)) || 'null'); }
+  function set(key, val) { localStorage.setItem(_k(key), JSON.stringify(val)); broadcast(); }
 
   function broadcast() {
     window.dispatchEvent(new Event('velora:update'));
@@ -76,7 +88,7 @@ const VELORA = (() => {
     getPrefs: ()    => get(KEYS.prefs) || {},
     setPrefs: (obj) => set(KEYS.prefs, obj),
 
-    getProfile: ()    => get(KEYS.profile) || { name: 'Hillary Nicoli', email: 'hillary@velora.app' },
+    getProfile: ()    => get(KEYS.profile) || { name: 'Hillary Nicoli', email: 'usuario@paipede.app' },
     setProfile: (obj) => set(KEYS.profile, obj),
 
     getTutorials: ()    => get(KEYS.tutorials) || {},
@@ -85,30 +97,24 @@ const VELORA = (() => {
 
   // ── TUTORIAL HELPERS ─────────────────────────────
   // Per-user tutorial flags stored as { [userId]: { maca: true, ... } }
-  function _userId() {
-    const s = getSession();
-    return (s && (s.id || s.email || s.name)) || 'guest';
-  }
-
   function hasSeenTutorial(key) {
     const all = db.getTutorials();
-    return !!(all[_userId()] && all[_userId()][key]);
+    return !!(all[_uid()] && all[_uid()][key]);
   }
 
   function markTutorialSeen(key) {
     const all = db.getTutorials();
-    if (!all[_userId()]) all[_userId()] = {};
-    all[_userId()][key] = true;
+    if (!all[_uid()]) all[_uid()] = {};
+    all[_uid()][key] = true;
     db.setTutorials(all);
   }
 
   // ── SEED DATA ────────────────────────────────────
   function seedAll() {
-    const now = new Date();
-    const y   = now.getFullYear();
-    const m   = String(now.getMonth() + 1).padStart(2, '0');
+    // New users get empty data — only seed categories (no transactions/bills/budgets/goals)
+    const isNewUser = !localStorage.getItem(`${_uid()}__velora_seeded`);
 
-    // Categories
+    // Always seed categories if missing
     if (!db.getCategories().length) {
       db.setCategories([
         { id:1, name:'Mercado',    type:'expense', icon:'fa-cart-shopping', color:'#22c55e', desc:'Compras de supermercado', locked:true },
@@ -121,60 +127,11 @@ const VELORA = (() => {
       ]);
     }
 
-    // Transactions
-    if (!get(KEYS.transactions)) {
-      db.setTransactions([
-        { id:1,  type:'income',  description:'Salário',       amount:5800,  category:'Salário',    date:`${y}-${m}-01`, account:'Conta corrente', payment:'PIX',     status:'paid',    notes:'' },
-        { id:2,  type:'expense', description:'Supermercado',  amount:215.8, category:'Mercado',    date:`${y}-${m}-03`, account:'Débito',         payment:'Débito',  status:'paid',    notes:'' },
-        { id:3,  type:'expense', description:'Uber',          amount:45.9,  category:'Transporte', date:`${y}-${m}-05`, account:'Conta corrente', payment:'PIX',     status:'paid',    notes:'' },
-        { id:4,  type:'expense', description:'Netflix',       amount:55,    category:'Lazer',      date:`${y}-${m}-07`, account:'Crédito',        payment:'Crédito', status:'paid',    notes:'' },
-        { id:5,  type:'expense', description:'Energia',       amount:120,   category:'Contas',     date:`${y}-${m}-08`, account:'Conta corrente', payment:'Boleto',  status:'paid',    notes:'' },
-        { id:6,  type:'expense', description:'Farmácia',      amount:89,    category:'Saúde',      date:`${y}-${m}-10`, account:'Dinheiro',       payment:'Dinheiro',status:'paid',    notes:'' },
-        { id:7,  type:'expense', description:'Mercado Extra', amount:345,   category:'Mercado',    date:`${y}-${m}-12`, account:'Crédito',        payment:'Crédito', status:'paid',    notes:'' },
-        { id:8,  type:'expense', description:'Gasolina',      amount:195,   category:'Transporte', date:`${y}-${m}-14`, account:'Débito',         payment:'Débito',  status:'paid',    notes:'' },
-        { id:9,  type:'expense', description:'Cinema',        amount:85,    category:'Lazer',      date:`${y}-${m}-16`, account:'Crédito',        payment:'Crédito', status:'paid',    notes:'' },
-        { id:10, type:'expense', description:'Internet',      amount:99.9,  category:'Contas',     date:`${y}-${m}-18`, account:'Conta corrente', payment:'Débito',  status:'pending', notes:'' },
-        { id:11, type:'expense', description:'Hortifruti',    amount:172,   category:'Mercado',    date:`${y}-${m}-20`, account:'Dinheiro',       payment:'Dinheiro',status:'paid',    notes:'' },
-        { id:12, type:'expense', description:'Academia',      amount:89.9,  category:'Lazer',      date:`${y}-${m}-22`, account:'Débito',         payment:'Débito',  status:'pending', notes:'' },
-        { id:13, type:'expense', description:'Ônibus',        amount:98,    category:'Transporte', date:`${y}-${m}-24`, account:'Conta corrente', payment:'PIX',     status:'paid',    notes:'' },
-        { id:14, type:'expense', description:'Outros gastos', amount:115,   category:'Outros',     date:`${y}-${m}-26`, account:'Dinheiro',       payment:'Dinheiro',status:'paid',    notes:'' },
-      ]);
-    }
-
-    // Bills (simple — for dashboard widget)
-    if (!get(KEYS.bills)) {
-      db.setSimpleBills([
-        { id:1, name:'Conta de luz', icon:'fa-bolt',     amount:120,  dueDay:18 },
-        { id:2, name:'Internet',     icon:'fa-wifi',     amount:99.9, dueDay:20 },
-        { id:3, name:'Academia',     icon:'fa-dumbbell', amount:89.9, dueDay:25 },
-      ]);
-    }
-
-    // Bills full
-    if (!get(KEYS.billsFull)) {
-      db.setBills([
-        { id:1, name:'Conta de luz', category:'Contas',  amount:120,  issue:`${y}-${m}-01`, due:`${y}-${m}-18`, paidDate:'', account:'Conta corrente', recurrence:'monthly', desc:'', status:'pending' },
-        { id:2, name:'Internet',     category:'Contas',  amount:99.9, issue:`${y}-${m}-01`, due:`${y}-${m}-20`, paidDate:'', account:'Conta corrente', recurrence:'monthly', desc:'', status:'pending' },
-        { id:3, name:'Academia',     category:'Saúde',   amount:89.9, issue:`${y}-${m}-01`, due:`${y}-${m}-25`, paidDate:'', account:'Débito',         recurrence:'monthly', desc:'', status:'pending' },
-        { id:4, name:'Aluguel',      category:'Moradia', amount:1200, issue:`${y}-${m}-01`, due:`${y}-${m}-10`, paidDate:'', account:'Conta corrente', recurrence:'monthly', desc:'', status:'pending' },
-      ]);
-    }
-
-    // Budgets
-    if (!db.getBudgets().length) {
-      db.setBudgets([
-        { id:1, name:'Gastos gerais', category:'Geral',      limit:2500, start:`${y}-${m}-01`, end:`${y}-${m}-30`, period:'monthly' },
-        { id:2, name:'Alimentação',   category:'Mercado',    limit:800,  start:`${y}-${m}-01`, end:`${y}-${m}-30`, period:'monthly' },
-        { id:3, name:'Transporte',    category:'Transporte', limit:400,  start:`${y}-${m}-01`, end:`${y}-${m}-30`, period:'monthly' },
-      ]);
-    }
-
-    // Goals
-    if (!db.getGoals().length) {
-      db.setGoals([
-        { id:1, name:'Viagem dos sonhos',      desc:'Férias internacionais',  target:5000,  current:3000, deadline:'2025-12-31', emoji:'🏖️' },
-        { id:2, name:'Reserva de emergência',  desc:'6 meses de despesas',    target:15000, current:4500, deadline:'2026-06-30', emoji:'🛡️' },
-      ]);
+    // Only seed demo data for the very first user (demo account)
+    // New users start with empty transactions, bills, budgets and goals
+    if (isNewUser) {
+      localStorage.setItem(`${_uid()}__velora_seeded`, '1');
+      // Leave transactions, bills, budgets, goals empty for new users
     }
   }
 
